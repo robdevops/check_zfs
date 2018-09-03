@@ -1,0 +1,29 @@
+#!/bin/bash
+set -euo pipefail
+
+error() {
+    printf "$@\n\n" >&2
+    exit 3
+
+}
+
+zpool_status() {
+    zpool status -x 2> /dev/null
+    return $?
+
+}
+
+[[ ! $( whoami ) == 'root' ]] && error "Must run as root."
+[[ ! -x $( which zpool ) ]] && error "Command not found in PATH: zpool"
+
+ZPOOL_OUTPUT=$( zpool_status ) || error "Error while running: zpool status -x"
+
+if [[ $ZPOOL_OUTPUT = "all pools are healthy" ]]; then
+    printf "OK: all pools are healthy.\n"
+    exit 0
+
+else
+    printf "WARNING: Output of zpool status -x was:\n\n$ZPOOL_OUTPUT\n\n"
+    exit 1
+
+fi
